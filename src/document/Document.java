@@ -53,7 +53,17 @@ public abstract class Document {
 		// TODO: Implement this method so that you can call it from the 
 	    // getNumSyllables method in BasicDocument (module 1) and 
 	    // EfficientDocument (module 2).
-	    return 0;
+		if (word.equals(""))
+			return 0;
+		String [] syllables = word.split("[^aeiouyAEIOUY]+");
+		char lastChar = word.charAt(word.length()-1);
+		int size = syllables.length;
+		int num = size;
+		if (syllables[0].equals(""))
+			num --;
+		if ("e".equals(syllables[size - 1]) && num > 1 && lastChar == 'e')
+			num --;
+		return num;
 	}
 	
 	/** A method for testing
@@ -117,7 +127,9 @@ public abstract class Document {
 	public double getFleschScore()
 	{
 	    // TODO: Implement this method
-	    return 0.0;
+		double flesch = 206.835 - 1.015 * getNumWords() / getNumSentences()
+				- 84.6 * getNumSyllables() / getNumWords();
+	    return flesch;
 	}
 	
 	
