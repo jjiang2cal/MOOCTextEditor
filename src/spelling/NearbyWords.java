@@ -77,6 +77,29 @@ public class NearbyWords implements SpellingSuggest {
 	 */
 	public void insertions(String s, List<String> currentList, boolean wordsOnly ) {
 		// TODO: Implement this method  
+		for(int index = 0; index < s.length(); index++){
+			for(int charCode = (int)'a'; charCode <= (int)'z'; charCode++) {
+				// use StringBuffer for an easy interface to permuting the 
+				// letters in the String
+				StringBuffer sb = new StringBuffer(s);
+				sb.insert(index, (char)charCode);
+
+				// if the item isn't in the list, and
+				// (if wordsOnly is true) is a real word, add to the list
+				if(!currentList.contains(sb.toString()) && 
+						(!wordsOnly||dict.isWord(sb.toString()))) {
+					currentList.add(sb.toString());
+				}
+			}
+		}
+		for(int charCode = (int)'a'; charCode <= (int)'z'; charCode++) {
+			StringBuffer sb = new StringBuffer(s);
+			sb.append((char)charCode);
+			if(!currentList.contains(sb.toString()) && 
+					(!wordsOnly||dict.isWord(sb.toString()))) {
+				currentList.add(sb.toString());
+			}
+		}
 	}
 
 	/** Add to the currentList Strings that are one character deletion away
@@ -88,6 +111,19 @@ public class NearbyWords implements SpellingSuggest {
 	 */
 	public void deletions(String s, List<String> currentList, boolean wordsOnly ) {
 		// TODO: Implement this method
+		for(int index = 0; index < s.length(); index++){
+			// use StringBuffer for an easy interface to permuting the 
+			// letters in the String
+			StringBuffer sb = new StringBuffer(s);
+			sb.deleteCharAt(index);
+
+			// if the item isn't in the list, and
+			// (if wordsOnly is true) is a real word, add to the list
+			if(!currentList.contains(sb.toString()) && 
+					(!wordsOnly||dict.isWord(sb.toString()))) {
+				currentList.add(sb.toString());
+			}
+		}
 	}
 
 	/** Add to the currentList Strings that are one character deletion away
@@ -97,7 +133,8 @@ public class NearbyWords implements SpellingSuggest {
 	 * @return the list of spelling suggestions
 	 */
 	@Override
-	public List<String> suggestions(String word, int numSuggestions) {
+	public List<String> suggestions(String word, int numSuggestions) 
+	                    throws IllegalArgumentException {
 
 		// initial variables
 		List<String> queue = new LinkedList<String>();     // String to explore
@@ -112,26 +149,62 @@ public class NearbyWords implements SpellingSuggest {
 					
 		// TODO: Implement the remainder of this method, see assignment for algorithm
 		
+		if (numSuggestions < 0)
+			throw new IllegalArgumentException();
+		int suggested = 0;
+		int searchedStrs = 0;
+		while (!queue.isEmpty() && suggested < numSuggestions
+				&& searchedStrs <= THRESHOLD) {
+			String curr = queue.remove(0);
+			List<String> oneList = distanceOne(curr, true);
+			for (String s : oneList) {
+				if (!visited.contains(s)) {
+					visited.add(s);
+					queue.add(s);
+					searchedStrs ++;
+					if (searchedStrs > THRESHOLD)
+						break;
+					if (dict.isWord(s)) {
+						retList.add(s);
+						suggested ++;
+						if (suggested >= numSuggestions)
+							break;
+					}
+				}
+			}
+		}
+		
+		
 		return retList;
 
 	}	
 
    public static void main(String[] args) {
-	   /* basic testing code to get started
+	   /* basic testing code to get started 
 	   String word = "i";
 	   // Pass NearbyWords any Dictionary implementation you prefer
 	   Dictionary d = new DictionaryHashSet();
 	   DictionaryLoader.loadDictionary(d, "data/dict.txt");
 	   NearbyWords w = new NearbyWords(d);
 	   List<String> l = w.distanceOne(word, true);
-	   System.out.println("One away word Strings for for \""+word+"\" are:");
+	   List<String> insertionList = new LinkedList<String>();
+	   w.insertions(word, insertionList, false);
+	   System.out.println("One away word Strings for \""+word+"\" are:");
 	   System.out.println(l+"\n");
+	   System.out.println("Insert one letter for \""+word+"\" are:");
+	   System.out.println(insertionList);
 
 	   word = "tailo";
 	   List<String> suggest = w.suggestions(word, 10);
 	   System.out.println("Spelling Suggestions for \""+word+"\" are:");
+	   System.out.println(suggest + "\n");
+	   
+	   word = "kangaro";
+	   suggest = w.suggestions(word, 10);
+	   System.out.println("Spelling Suggestions for \""+word+"\" are:");
 	   System.out.println(suggest);
-	   */
+	   /**/
+	   
    }
 
 }
