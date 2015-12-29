@@ -21,15 +21,18 @@ public class WPTree implements WordPath {
 	private WPTreeNode root;
 	// used to search for nearby Words
 	private NearbyWords nw; 
+	// THRESHOLD to determine how many words to look through
+	// (stops prohibitively long searching)
+	private static final int THRESHOLD = 10000; 
 	
 	// This constructor is used by the Text Editor Application
 	// You'll need to create your own NearbyWords object here.
 	public WPTree () {
 		this.root = null;
 		// TODO initialize a NearbyWords object
-		// Dictionary d = new DictionaryHashSet();
-		// DictionaryLoader.loadDictionary(d, "data/dict.txt");
-		// this.nw = new NearbyWords(d);
+		Dictionary d = new DictionaryHashSet();
+		DictionaryLoader.loadDictionary(d, "data/dict.txt");
+		this.nw = new NearbyWords(d);
 	}
 	
 	//This constructor will be used by the grader code
@@ -39,9 +42,46 @@ public class WPTree implements WordPath {
 	}
 	
 	// see method description in WordPath interface
-	public List<String> findPath(String word1, String word2) 
+	public List<String> findPath(String word1, String word2)
 	{
 	    // TODO: Implement this method.
+		if (!nw.dict.isWord(word2))
+			return new LinkedList<String>();
+		
+		List<WPTreeNode> queue = new LinkedList<WPTreeNode>();     //words to explore
+		HashSet<String> visited = new HashSet<String>();   // to avoid exploring the same  
+		                                                   // string multiple times
+        //List<String> retList = new LinkedList<String>();   // words to return
+        
+        // Set the root to be a WPTreeNode containing word1
+        root = new WPTreeNode(word1, null);
+        WPTreeNode curr = root;
+        
+        // Add the initial word to visited
+        queue.add(root);
+        visited.add(word1);
+        
+        int searchedWords = 0;
+        
+        while (!queue.isEmpty() && !word2.equals(curr.getWord())
+        		&& searchedWords < THRESHOLD) {
+        	curr = queue.remove(0);
+        	List<String> oneList = nw.distanceOne(curr.getWord(), true);
+        	for (String s : oneList) {
+        		if (!visited.contains(s)) {
+        			visited.add(s);
+        			WPTreeNode child = curr.addChild(s);
+        			queue.add(child);
+        			if (word2.equals(s)) {
+        				return child.buildPathToRoot();
+        			}
+        			searchedWords ++;
+        			if (searchedWords > THRESHOLD)
+        				break;
+        		}
+        	}
+        }
+        
 	    return new LinkedList<String>();
 	}
 	
@@ -55,6 +95,20 @@ public class WPTree implements WordPath {
 		ret+= "]";
 		return ret;
 	}
+	
+	public static void main(String[] args) {
+		   /* basic testing code to get started 
+		   String word1 = "time";
+		   String word2 = "theme";
+		   WPTree tree1 = new WPTree();
+		   
+		   System.out.println("Word1: " + word1);
+		   System.out.println("Word2: " + word2);
+		   System.out.println(tree1.findPath(word1, word2));
+		   
+		   /**/
+		   
+	   }
 	
 }
 
